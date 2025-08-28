@@ -20,7 +20,7 @@ export function MapControls({
   themeParkCount,
 }: MapControlsProps) {
   return (
-    <Card className="absolute top-4 left-4 z-[1000] p-4 shadow-glass backdrop-blur-md bg-white/90 border border-white/20">
+    <Card className="absolute top-4 right-4 z-[1000] p-4 shadow-glass backdrop-blur-md bg-white/90 border border-white/20">
       <div className="space-y-3">
         <h3 className="font-semibold text-foreground text-lg">Map Layers</h3>
         
