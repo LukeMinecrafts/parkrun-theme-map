@@ -10,7 +10,7 @@ export function Header() {
             <div className="flex items-center gap-2">
               <TreePine className="w-8 h-8 text-primary" />
               <h1 className="text-2xl font-bold text-foreground">
-                Park & Play Map
+                Parkrun & Theme Park Map
               </h1>
             </div>
           </div>
