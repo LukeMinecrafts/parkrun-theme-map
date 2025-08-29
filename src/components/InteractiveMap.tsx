@@ -81,33 +81,57 @@ export function InteractiveMap({
     };
   }, []);
 
-  // Fetch parkrun data
+  // Fetch parkrun data from UK CSV file
   useEffect(() => {
     const fetchParkruns = async () => {
       try {
-        // Note: This is a mock API call since parkrun API might have CORS restrictions
-        // In a real implementation, you'd use their official API
-        const response = await fetch('https://images.parkrun.com/events.json');
+        const response = await fetch('/uk-parkruns.csv');
         if (!response.ok) {
           throw new Error('Failed to fetch parkrun data');
         }
-        const data = await response.json();
+        const csvText = await response.text();
         
-        // Transform data to our format
-        const events: ParkrunEvent[] = data.events?.map((event: any) => ({
-          id: event.id,
-          name: event.name,
-          latitude: parseFloat(event.latitude),
-          longitude: parseFloat(event.longitude),
-          country: event.country || 'UK',
-          region: event.region || '',
-          status: event.status || 'active'
-        })).filter((event: ParkrunEvent) => 
-          !isNaN(event.latitude) && !isNaN(event.longitude)
-        ) || [];
+        // Parse CSV data
+        const lines = csvText.split('\n');
+        const header = lines[0].split(',');
+        
+        // Find column indices
+        const nameIndex = header.findIndex(col => col.toLowerCase().includes('name'));
+        const latIndex = header.findIndex(col => col.toLowerCase().includes('lat'));
+        const lngIndex = header.findIndex(col => col.toLowerCase().includes('lng') || col.toLowerCase().includes('lon'));
+        const locationIndex = header.findIndex(col => col.toLowerCase().includes('location'));
+        
+        const events: ParkrunEvent[] = lines.slice(1)
+          .filter(line => line.trim()) // Remove empty lines
+          .map((line, index) => {
+            const columns = line.split(',');
+            const name = columns[nameIndex]?.replace(/"/g, '') || `Parkrun ${index + 1}`;
+            const lat = parseFloat(columns[latIndex]?.replace(/"/g, '') || '0');
+            const lng = parseFloat(columns[lngIndex]?.replace(/"/g, '') || '0');
+            const location = columns[locationIndex]?.replace(/"/g, '') || '';
+            
+            return {
+              id: index + 1,
+              name: name,
+              latitude: lat,
+              longitude: lng,
+              country: 'UK',
+              region: location,
+              status: 'active'
+            };
+          })
+          .filter((event: ParkrunEvent) => 
+            !isNaN(event.latitude) && !isNaN(event.longitude) && 
+            event.latitude !== 0 && event.longitude !== 0
+          );
 
         setParkruns(events);
         onParkrunCountChange(events.length);
+        
+        toast({
+          title: "Parkrun data loaded",
+          description: `Successfully loaded ${events.length} UK parkrun events`,
+        });
       } catch (error) {
         console.error('Error fetching parkrun data:', error);
         // Fallback with some sample UK parkruns
